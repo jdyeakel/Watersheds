@@ -442,7 +442,7 @@ for (ps in 1:length(p.single.vec)) {
     nn_cpp <- lapply(nn,function(x){x-1})
     
     #Extinction sequence (prob(ext) for Large patch)
-    ext.seq <- seq(0,1,0.02)
+    ext.seq <- seq(0,1,0.02) #Change to seq(0,0.4,0.02) for future runs... or seq(0,0.4,0.01) for the final product
     
     m.e <- matrix(0,length(ext.seq),repetitions)
     m.s <- matrix(0,length(ext.seq),repetitions)
