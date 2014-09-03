@@ -123,34 +123,44 @@ repetitions <- 10
 
 MG <- list()
 graphs <- list()
-for (i in 1:3) {
-  #Select Network
-  if (i == 1) {
-    #Full Network :: every node is connected to every other node
-    adj.m <- matrix(1,n,n); diag(adj.m) <- 0
-    graphs[[i]] <- graph.adjacency(adj.m)
-  }
-  if (i == 2) {
-    lattice.net <- graph.lattice(dimvector=c(sqrt(n),sqrt(n)))
-    adj.m <- get.adjacency(lattice.net)
-    #isSymmetric(as.matrix(adj.m))
-    graphs[[i]] <- lattice.net
-  }
-  if (i == 3) {
-    #Scale-Free ::
-    degs <- sample(1:n, n, replace=TRUE, prob=(1:n)^-1.8)
-    edgec <- 1
-    while (edgec != 2*l){
-      degs <- sample(1:n, n, replace=TRUE, prob=(1:n)^-1.8)
-      edgec <- sum(degs)
-    }
-    if (sum(degs) %% 2 != 0) { degs[1] <- degs[1] + 1 }
-    sf.net <- degree.sequence.game(degs, method="vl")
-    #all(degree(sf.net) == degs)
-    adj.m <- get.adjacency(sf.net)
-    #isSymmetric(adj.m)
-    graphs[[i]] <- sf.net
-  }
+
+#Full Network
+full.adj.m <- matrix(1,n,n); diag(full.adj.m) <- 0
+full.net <- graph.adjacency(full.adj.m)
+graphs[[1]] <- full.net
+
+#Lattice Network
+lattice.net <- graph.lattice(dimvector=c(sqrt(n),sqrt(n)))
+#isSymmetric(as.matrix(adj.m))
+graphs[[2]] <- lattice.net
+
+#Random Network
+random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
+nc <- no.clusters(random.net)
+while (nc > 1) {
+  random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
+  nc <- no.clusters(random.net)
+}
+graphs[[3]] <- random.net
+
+#Scale Free network
+#Scale-Free ::
+degs <- sample(1:n, n, replace=TRUE, prob=(1:n)^-1.8)
+edgec <- 1
+while (edgec != 2*l){
+  degs <- sample(1:n, n, replace=TRUE, prob=(1:n)^-1.8)
+  edgec <- sum(degs)
+}
+if (sum(degs) %% 2 != 0) { degs[1] <- degs[1] + 1 }
+sf.net <- degree.sequence.game(degs, method="vl")
+#all(degree(sf.net) == degs)
+#isSymmetric(adj.m)
+graphs[[4]] <- sf.net
+
+for (i in 1:4) {
+  
+  net <- graphs[[i]]
+  adj.m <- get.adjacency(net)
   
   #Make list of nearest neighbors for each node
   nn <- list()
@@ -161,7 +171,7 @@ for (i in 1:3) {
   nn_cpp <- lapply(nn,function(x){x-1})
   
   #Extinction sequence (prob(ext) for Large patch)
-  ext.seq <- seq(0,1,0.02)
+  ext.seq <- seq(0,0.4,0.02)
   
   m.e <- matrix(0,length(ext.seq),repetitions)
   m.s <- matrix(0,length(ext.seq),repetitions)
@@ -322,6 +332,9 @@ full.net <- graph.adjacency(full.adj.m)
 #Lattice
 lattice.net <- graph.lattice(dimvector=c(sqrt(n),sqrt(n)),directed=TRUE,mutual=TRUE)
 
+#Random net
+
+
 #Scale Free
 #Scale-Free ::
 degs <- sample(1:n, n, replace=TRUE, prob=(1:n)^-1.8)
@@ -442,7 +455,7 @@ for (ps in 1:length(p.single.vec)) {
     nn_cpp <- lapply(nn,function(x){x-1})
     
     #Extinction sequence (prob(ext) for Large patch)
-    ext.seq <- seq(0,1,0.02) #Change to seq(0,0.4,0.02) for future runs... or seq(0,0.4,0.01) for the final product
+    ext.seq <- seq(0,0.4,0.02) #Change to seq(0,0.4,0.02) for future runs... or seq(0,0.4,0.01) for the final product
     
     m.e <- matrix(0,length(ext.seq),repetitions)
     m.s <- matrix(0,length(ext.seq),repetitions)
@@ -466,7 +479,7 @@ for (ps in 1:length(p.single.vec)) {
     #Probabilities
     c <- 0.2
     r <- 0.2
-    m <- 0.0
+    m <- 0.1
     #el <- ext.seq[j]
     #es <- 2*el
     
