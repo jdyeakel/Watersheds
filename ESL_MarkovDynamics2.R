@@ -491,6 +491,9 @@ for (ps in 1:length(p.single.vec)) {
 image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m",m,".RData",sep="")
 save.image(image_filename)
 
+load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m0.RData")
+
+#Exporing Results for 3D plots in Mathematica
 name_var <- c("E","S","L")
 name_net <- c("Full","Lattice","SF")
 for (i in 1:3) { #nets
@@ -509,6 +512,33 @@ for (i in 1:3) { #nets
     write.table(tab,file=filename,col.names=FALSE,row.names=FALSE,sep=",")
   }
 }
+
+# Contour plot of the effect of directedness on persistence
+pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m",m,".pdf",sep="")
+dev.off()
+pdf(file=pdf_filename,width=3.5,height=6)
+op <- par(mfrow = c(3,1),
+          oma = c(5,4,0,0) + 0.1,
+          mar = c(0,3,1,1) + 0.1,
+          mgp = c(2, 1, 0))
+colors <- brewer.pal(11,"Spectral")
+for (i in 1:3) { # Loop over different networks
+  for (ps in 1:length(p.single.vec)) {
+    tot.pers <- apply(MGP[[ps]][[i]][[2]] + MGP[[ps]][[i]][[3]],1,mean)
+    if (ps == 1) {
+      if (i == 3) {
+        plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,1.5),ylim=c(0,1))
+      } else {plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,1.5),ylim=c(0,1), xaxt='n', ann=FALSE)}
+    } else {
+      lines(ext.seq/c,tot.pers,type="l",lwd=2,col=colors[ps])
+    }
+  }
+}
+par(op)
+dev.off()
+
+
+
 
 
 
