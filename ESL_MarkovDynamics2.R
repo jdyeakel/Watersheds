@@ -214,7 +214,7 @@ for (i in 1:3) {
 image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m",m,".RData",sep="")
 save.image(image_filename)
 
-load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.1.RData")
+load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.RData")
 pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m",m,".pdf",sep="")
 
 colors <- brewer.pal(3,"Set1"); trans <- ""
@@ -250,6 +250,17 @@ dev.off()
 plot(lattice.net,vertex.size=degree(lattice.net),vertex.label=NA,vertex.color=colors[2],edge.color="lightblue")
 plot(sf.net,vertex.size=degree(sf.net)+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2)
 
+
+#Difference in overall persistence between Lattice and SF networks
+load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.RData")
+Diffm0 = apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean) - apply(MG[[2]][[2]] + MG[[2]][[3]],1,mean)
+load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.1.RData")
+Diffm1 = apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean) - apply(MG[[2]][[2]] + MG[[2]][[3]],1,mean)
+pdf(file="/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_Diff.pdf",width=5.5,height=5.0)
+plot(ext.seq/c,Diffm0,type="l",lwd=2,col=colors[2],xlim=c(0,2),ylim=c(-0.2,0.7),xlab="e/c",ylab="Difference in Cum. Proportion (SF-Lattice)")
+lines(ext.seq/c,Diffm1,lwd=2,col=colors[3])
+lines(seq(0,2,0.1),rep(0,21),lty=3)
+dev.off()
 
 
 
@@ -527,8 +538,8 @@ for (i in 1:3) { # Loop over different networks
     tot.pers <- apply(MGP[[ps]][[i]][[2]] + MGP[[ps]][[i]][[3]],1,mean)
     if (ps == 1) {
       if (i == 3) {
-        plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,1.5),ylim=c(0,1))
-      } else {plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,1.5),ylim=c(0,1), xaxt='n', ann=FALSE)}
+        plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,2),ylim=c(0,1))
+      } else {plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,2),ylim=c(0,1), xaxt='n', ann=FALSE)}
     } else {
       lines(ext.seq/c,tot.pers,type="l",lwd=2,col=colors[ps])
     }
