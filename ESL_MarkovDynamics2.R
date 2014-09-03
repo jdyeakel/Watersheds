@@ -366,7 +366,7 @@ for (ps in 1:length(p.single.vec)) {
   p.single <- p.single.vec[ps]
   
   MG <- list()
-  graphs <- list()
+  dir.graphs <- list()
   for (i in 1:3) {
     
     print(paste("Pr(single link)=",p.single,"/1.0 :: ","Graph ",i,"/4"),sep="")
@@ -425,10 +425,15 @@ for (ps in 1:length(p.single.vec)) {
       lattice.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(lattice.net.dir)
       #isSymmetric(as.matrix(adj.m))
-      #graphs[[i]] <- lattice.net
+      dir.graphs[[i]] <- lattice.net
     }
     if (i == 2) {
-      edgel <- get.edgelist(random.net)
+      edgelist_in <- get.edgelist(random.net)
+      edgelist_out <- matrix(0,length(edgelist_in[,1]),2)
+      edgelist_out[,1] <- edgelist_in[,2]; edgelist_out[,2] <- edgelist_in[,1]
+      edgelist_dir <- rbind(edgelist_in,edgelist_out)
+      random.net.dir <- graph.edgelist(edgelist_dir,directed=TRUE) #FULLY BIDIRECTIONAL GRAPH
+      edgel <- get.edgelist(random.net.dir)
       edgel.new <- edgel
       skip <- 0
       tic <- 0
@@ -452,7 +457,7 @@ for (ps in 1:length(p.single.vec)) {
       random.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(random.net.dir)
       #isSymmetric(as.matrix(adj.m))
-      #graphs[[i]] <- lattice.net
+      dir.graphs[[i]] <- lattice.net
     }
     if (i == 3) {
       edgelist_in <- get.edgelist(sf.net)
@@ -486,7 +491,7 @@ for (ps in 1:length(p.single.vec)) {
       }
       sf.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(sf.net.dir)
-      #graphs[[i]] <- sf.net.dir
+      dir.graphs[[i]] <- sf.net.dir
     }
     
     #Make list of nearest neighbors for each node
@@ -522,7 +527,7 @@ for (ps in 1:length(p.single.vec)) {
     #Probabilities
     c <- 0.2
     r <- 0.2
-    m <- 0.1
+    m <- 0.0
     #el <- ext.seq[j]
     #es <- 2*el
     
