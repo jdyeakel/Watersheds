@@ -328,15 +328,15 @@ p.single.vec <- seq(0,1,0.1)
 
 graphs <- list()
 
-#Build initial nets first
-#Full
-full.adj.m <- matrix(1,n,n); diag(full.adj.m) <- 0
-full.net <- graph.adjacency(full.adj.m)
-graphs[[1]] <- full.net
+# #Build initial nets first
+# #Full
+# full.adj.m <- matrix(1,n,n); diag(full.adj.m) <- 0
+# full.net <- graph.adjacency(full.adj.m)
+# graphs[[1]] <- full.net
 
 #Lattice
 lattice.net <- graph.lattice(dimvector=c(sqrt(n),sqrt(n)),directed=TRUE,mutual=TRUE)
-graphs[[2]] <- lattice.net
+graphs[[1]] <- lattice.net
 
 #Random net
 random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
@@ -345,7 +345,7 @@ while (nc > 1) {
   random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
   nc <- no.clusters(random.net)
 }
-graphs[[3]] <- random.net
+graphs[[2]] <- random.net
 
 #Scale Free
 #Scale-Free ::
@@ -357,7 +357,7 @@ while (edgec != 2*l){
 }
 if (sum(degs) %% 2 != 0) { degs[1] <- degs[1] + 1 }
 sf.net <- degree.sequence.game(out.deg=degs, method="vl")
-graphs[[4]] <- sf.net
+graphs[[3]] <- sf.net
 
 MGP <- list()
 
@@ -372,35 +372,35 @@ for (ps in 1:length(p.single.vec)) {
     print(paste("Pr(single link)=",p.single,"/1.0 :: ","Graph ",i,"/4"),sep="")
     
     #Select Network
+#     if (i == 1) {
+#       #Full Network :: every node is connected to every other node
+#       #adj.m <- get.adjacency(full.net)
+#       edgel <- get.edgelist(full.net)
+#       edgel.new <- edgel
+#       skip <- 0
+#       tic <- 0
+#       del.link <- numeric()
+#       for (k in 1:length(edgel[,1])) {
+#         if ((k %in% skip) == FALSE) {
+#           link <- edgel[k,]
+#           pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
+#           pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
+#           skip <- c(skip,pos1,pos2)
+#           draw.single <- runif(1)
+#           if (draw.single < p.single) {
+#             tic <- tic + 1
+#             del.link[tic] <- sample(c(pos1,pos2),1)
+#           }
+#         }
+#       }
+#       if (length(del.link > 0)) {
+#         edgel.new <- edgel.new[-del.link,]
+#       }
+#       full.net.dir <- graph.edgelist(edgel.new)
+#       adj.m <- get.adjacency(full.net.dir)
+#       #graphs[[i]] <- full.net.dir
+#     }
     if (i == 1) {
-      #Full Network :: every node is connected to every other node
-      #adj.m <- get.adjacency(full.net)
-      edgel <- get.edgelist(full.net)
-      edgel.new <- edgel
-      skip <- 0
-      tic <- 0
-      del.link <- numeric()
-      for (k in 1:length(edgel[,1])) {
-        if ((k %in% skip) == FALSE) {
-          link <- edgel[k,]
-          pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
-          pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
-          skip <- c(skip,pos1,pos2)
-          draw.single <- runif(1)
-          if (draw.single < p.single) {
-            tic <- tic + 1
-            del.link[tic] <- sample(c(pos1,pos2),1)
-          }
-        }
-      }
-      if (length(del.link > 0)) {
-        edgel.new <- edgel.new[-del.link,]
-      }
-      full.net.dir <- graph.edgelist(edgel.new)
-      adj.m <- get.adjacency(full.net.dir)
-      #graphs[[i]] <- full.net.dir
-    }
-    if (i == 2) {
       edgel <- get.edgelist(lattice.net)
       edgel.new <- edgel
       skip <- 0
@@ -427,7 +427,7 @@ for (ps in 1:length(p.single.vec)) {
       #isSymmetric(as.matrix(adj.m))
       #graphs[[i]] <- lattice.net
     }
-    if (i == 3) {
+    if (i == 2) {
       edgel <- get.edgelist(random.net)
       edgel.new <- edgel
       skip <- 0
@@ -454,7 +454,7 @@ for (ps in 1:length(p.single.vec)) {
       #isSymmetric(as.matrix(adj.m))
       #graphs[[i]] <- lattice.net
     }
-    if (i == 4) {
+    if (i == 3) {
       edgelist_in <- get.edgelist(sf.net)
       edgelist_out <- matrix(0,length(edgelist_in[,1]),2)
       edgelist_out[,1] <- edgelist_in[,2]; edgelist_out[,2] <- edgelist_in[,1]
