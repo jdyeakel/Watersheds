@@ -158,6 +158,7 @@ sf.net <- degree.sequence.game(degs, method="vl")
 graphs[[4]] <- sf.net
 
 for (i in 1:4) {
+  print(paste("Graph ",i,"/4"),sep="")
   
   net <- graphs[[i]]
   adj.m <- get.adjacency(net)
@@ -195,7 +196,7 @@ for (i in 1:4) {
   #Probabilities
   c <- 0.2
   r <- 0.2
-  m <- 0.0
+  m <- 0.1
   #el <- ext.seq[j]
   #es <- 2*el
   
@@ -225,24 +226,25 @@ image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Wate
 save.image(image_filename)
 
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.RData")
+
 pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m",m,".pdf",sep="")
 
 colors <- brewer.pal(3,"Set1"); trans <- ""
 dev.off()
 pdf(file=pdf_filename
-    ,width=3.5,height=6)
-op <- par(mfrow = c(3,1),
+    ,width=6.5,height=14)
+op <- par(mfrow = c(4,1),
           oma = c(5,4,0,0) + 0.1,
           mar = c(0,3,1,1) + 0.1,
           mgp = c(2, 1, 0))
-for (i in 1:3) {
+for (i in 1:4) {
   
   m.e <- MG[[i]][[1]]
   m.s <- MG[[i]][[2]]
   m.l <- MG[[i]][[3]]
-  if (i == 3) {
+  if (i == 4) {
     plot(ext.seq/c,apply(m.e,1,mean),type="l",col=colors[1],xlim=c(0,2),ylim=c(0,1),xlab="e/c",ylab="Proportion")
-  } else {plot(ext.seq/c,apply(m.e,1,mean),type="l",col=colors[1],xlim=c(0,1.5),ylim=c(0,1), xaxt='n', ann=FALSE)}
+  } else {plot(ext.seq/c,apply(m.e,1,mean),type="l",col=colors[1],xlim=c(0,2),ylim=c(0,1), xaxt='n', ann=FALSE)}
   polygon(x=c(ext.seq/c,rev(ext.seq/c)),
           y=c(apply(m.e,1,mean)+apply(m.e,1,sd),rev(apply(m.e,1,mean)-apply(m.e,1,sd))),col=paste(colors[1],"50",sep=""),border=NA)
   lines(ext.seq/c,apply(m.s,1,mean),col=colors[2])
@@ -263,11 +265,11 @@ plot(sf.net,vertex.size=degree(sf.net)+2,vertex.label=NA,vertex.color=colors[3],
 
 #Difference in overall persistence between Lattice and SF networks
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.RData")
-Diffm0 = apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean) - apply(MG[[2]][[2]] + MG[[2]][[3]],1,mean)
+Diffm0 = apply(MG[[4]][[2]] + MG[[4]][[3]],1,mean) - apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean)
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.1.RData")
-Diffm1 = apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean) - apply(MG[[2]][[2]] + MG[[2]][[3]],1,mean)
+Diffm1 = apply(MG[[4]][[2]] + MG[[4]][[3]],1,mean) - apply(MG[[3]][[2]] + MG[[3]][[3]],1,mean)
 pdf(file="/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_Diff.pdf",width=5.5,height=5.0)
-plot(ext.seq/c,Diffm0,type="l",lwd=2,col=colors[2],xlim=c(0,2),ylim=c(-0.2,0.7),xlab="e/c",ylab="Difference in Cum. Proportion (SF-Lattice)")
+plot(ext.seq/c,Diffm0,type="l",lwd=2,col=colors[2],xlim=c(0,2),ylim=c(-0.2,0.7),xlab="e/c",ylab="Difference in Cum. Proportion (SF-Rand)")
 lines(ext.seq/c,Diffm1,lwd=2,col=colors[3])
 lines(seq(0,2,0.1),rep(0,21),lty=3)
 dev.off()
@@ -324,16 +326,26 @@ l <- 200
 repetitions <- 10
 p.single.vec <- seq(0,1,0.1)
 
+graphs <- list()
+
 #Build initial nets first
 #Full
 full.adj.m <- matrix(1,n,n); diag(full.adj.m) <- 0
 full.net <- graph.adjacency(full.adj.m)
+graphs[[1]] <- full.net
 
 #Lattice
 lattice.net <- graph.lattice(dimvector=c(sqrt(n),sqrt(n)),directed=TRUE,mutual=TRUE)
+graphs[[2]] <- lattice.net
 
 #Random net
-
+random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
+nc <- no.clusters(random.net)
+while (nc > 1) {
+  random.net <- erdos.renyi.game(n,l,type="gnm",directed=FALSE,loops=FALSE)
+  nc <- no.clusters(random.net)
+}
+graphs[[3]] <- random.net
 
 #Scale Free
 #Scale-Free ::
@@ -345,6 +357,7 @@ while (edgec != 2*l){
 }
 if (sum(degs) %% 2 != 0) { degs[1] <- degs[1] + 1 }
 sf.net <- degree.sequence.game(out.deg=degs, method="vl")
+graphs[[4]] <- sf.net
 
 MGP <- list()
 
@@ -355,6 +368,9 @@ for (ps in 1:length(p.single.vec)) {
   MG <- list()
   graphs <- list()
   for (i in 1:3) {
+    
+    print(paste("Pr(single link)=",p.single,"/1.0 :: ","Graph ",i,"/4"),sep="")
+    
     #Select Network
     if (i == 1) {
       #Full Network :: every node is connected to every other node
@@ -412,6 +428,33 @@ for (ps in 1:length(p.single.vec)) {
       #graphs[[i]] <- lattice.net
     }
     if (i == 3) {
+      edgel <- get.edgelist(random.net)
+      edgel.new <- edgel
+      skip <- 0
+      tic <- 0
+      del.link <- numeric()
+      for (k in 1:length(edgel[,1])) {
+        if ((k %in% skip) == FALSE) {
+          link <- edgel[k,]
+          pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
+          pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
+          skip <- c(skip,pos1,pos2)
+          draw.single <- runif(1)
+          if (draw.single < p.single) {
+            tic <- tic + 1
+            del.link[tic] <- sample(c(pos1,pos2),1)
+          }
+        }
+      }
+      if (length(del.link > 0)) {
+        edgel.new <- edgel.new[-del.link,]
+      }
+      random.net.dir <- graph.edgelist(edgel.new)
+      adj.m <- get.adjacency(random.net.dir)
+      #isSymmetric(as.matrix(adj.m))
+      #graphs[[i]] <- lattice.net
+    }
+    if (i == 4) {
       edgelist_in <- get.edgelist(sf.net)
       edgelist_out <- matrix(0,length(edgelist_in[,1]),2)
       edgelist_out[,1] <- edgelist_in[,2]; edgelist_out[,2] <- edgelist_in[,1]
