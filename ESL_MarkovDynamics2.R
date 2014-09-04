@@ -884,10 +884,18 @@ for (i in 1:3) {
   } # end resc
   
   MRG[[i]] <- MR
-  MRG.dir[[i]] <- MR
+  MRG.dir[[i]] <- MR.dir
   
 } # end i
+image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference.RData",sep="")
+save.image(image_filename)
 
+for (i in 1:3) {
+  for (resc in 1:length(m.seq)) {
+    cum.prop.undir <- apply(MRG[[i]][[resc]][[2]],1,mean) + apply(MRG[[i]][[resc]][[3]],1,mean)
+    cum.prop.dir <- apply(MRG.dir[[i]][[resc]][[2]],1,mean) + apply(MRG.dir[[i]][[resc]][[3]],1,mean)
+  }
+}
 
 
 
