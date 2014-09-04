@@ -879,7 +879,7 @@ for (i in 1:3) {
     
     MR[[resc]] <- M
     
-    MR.dir[[resc]] <- M
+    MR.dir[[resc]] <- M.dir
     
   } # end resc
   
@@ -890,15 +890,50 @@ for (i in 1:3) {
 image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference.RData",sep="")
 save.image(image_filename)
 
+colors <- brewer.pal(11,"Spectral")
+
+
 for (i in 1:3) {
+  pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference_Graph",i,".pdf",sep="")
+  pdf(file=pdf_filename,width=12,height=8)
+  op <- par(mfrow = c(3,4),
+            oma = c(5,4,0,0) + 0.1,
+            mar = c(0,3,3,1) + 0.1,
+            mgp = c(2, 1, 0))
+  cum.diff.matrix <- matrix(0,length(ext.seq),length(m.seq))
   for (resc in 1:length(m.seq)) {
     cum.prop.undir <- apply(MRG[[i]][[resc]][[2]],1,mean) + apply(MRG[[i]][[resc]][[3]],1,mean)
     cum.prop.dir <- apply(MRG.dir[[i]][[resc]][[2]],1,mean) + apply(MRG.dir[[i]][[resc]][[3]],1,mean)
+    cum.diff <- cum.prop.undir - cum.prop.dir
+    #cum.diff.nonzero <- cum.diff[which(cum.diff != 0)]
+    cum.diff.matrix[,resc] <- cum.diff
+    plot(ext.seq/c,cum.prop.undir,type="l",ylim=c(0,1),col=colors[resc],lwd=2)
+    lines(ext.seq/c,cum.prop.dir,lty=2,col=colors[resc],lwd=2)
   }
+  par(op)
+  dev.off()
 }
 
-
-
+#BoxPlot
+pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference_Boxplots.pdf",sep="")
+pdf(file=pdf_filename,width=8,height=12)
+op <- par(mfrow = c(3,1),
+          oma = c(5,4,0,0) + 0.1,
+          mar = c(0,3,1,1) + 0.1,
+          mgp = c(2, 1, 0))
+for (i in 1:3) {
+  cum.diff.matrix <- matrix(0,length(ext.seq),length(m.seq))
+  for (resc in 1:length(m.seq)) {
+    cum.prop.undir <- apply(MRG[[i]][[resc]][[2]],1,mean) + apply(MRG[[i]][[resc]][[3]],1,mean)
+    cum.prop.dir <- apply(MRG.dir[[i]][[resc]][[2]],1,mean) + apply(MRG.dir[[i]][[resc]][[3]],1,mean)
+    cum.diff <- cum.prop.undir - cum.prop.dir
+    #cum.diff.nonzero <- cum.diff[which(cum.diff != 0)]
+    cum.diff.matrix[,resc] <- cum.diff
+  }
+  boxplot(cum.diff.matrix,boxwex=0.5,col=colors,names=m.seq,ylim=c(0,1),ylab=c("Cum. proportion differences (undirected-directed)"))
+}
+par(op)
+dev.off()
 
 
 

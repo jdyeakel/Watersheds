@@ -1,0 +1,303 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 10.0' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[       158,          7]
+NotebookDataLength[     11117,        293]
+NotebookOptionsPosition[     10789,        276]
+NotebookOutlinePosition[     11143,        292]
+CellTagsIndexPosition[     11100,        289]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+
+Cell[CellGroupData[{
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{
+   RowBox[{"MetapopDyn", "[", 
+    RowBox[{"es_", ",", "c_", ",", "el_", ",", "r_", ",", "m_", ",", "T_"}], 
+    "]"}], " ", ":=", "\[IndentingNewLine]", 
+   RowBox[{"NDSolve", "[", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{"Em", "'"}], "[", "t", "]"}], " ", "\[Equal]", " ", 
+        RowBox[{
+         RowBox[{"es", "*", 
+          RowBox[{"S", "[", "t", "]"}]}], " ", "-", " ", 
+         RowBox[{"c", "*", 
+          RowBox[{"L", "[", "t", "]"}], "*", 
+          RowBox[{"Em", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"S", "'"}], "[", "t", "]"}], " ", "\[Equal]", " ", 
+        RowBox[{
+         RowBox[{"c", "*", 
+          RowBox[{"L", "[", "t", "]"}], "*", 
+          RowBox[{"Em", "[", "t", "]"}]}], " ", "+", " ", 
+         RowBox[{"el", "*", 
+          RowBox[{"L", "[", "t", "]"}]}], "-", 
+         RowBox[{"es", "*", 
+          RowBox[{"S", "[", "t", "]"}]}], "-", 
+         RowBox[{"r", "*", 
+          RowBox[{"S", "[", "t", "]"}]}], " ", "-", " ", 
+         RowBox[{"m", "*", 
+          RowBox[{"L", "[", "t", "]"}], "*", 
+          RowBox[{"S", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"L", "'"}], "[", "t", "]"}], " ", "\[Equal]", " ", 
+        RowBox[{
+         RowBox[{"r", "*", 
+          RowBox[{"S", "[", "t", "]"}]}], " ", "+", " ", 
+         RowBox[{"m", "*", 
+          RowBox[{"L", "[", "t", "]"}], "*", 
+          RowBox[{"S", "[", "t", "]"}]}], "-", 
+         RowBox[{"el", "*", 
+          RowBox[{"L", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"Em", "[", "0", "]"}], "\[Equal]", 
+        RowBox[{"1", "/", "3"}]}], ",", 
+       RowBox[{
+        RowBox[{"S", "[", "0", "]"}], "\[Equal]", 
+        RowBox[{"1", "/", "3"}]}], ",", 
+       RowBox[{
+        RowBox[{"L", "[", "0", "]"}], "\[Equal]", 
+        RowBox[{"1", "/", "3"}]}]}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"Em", ",", "S", ",", "L"}], "}"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"t", ",", "0", ",", "T"}], "}"}], ",", 
+     RowBox[{"MaxSteps", "\[Rule]", "Infinity"}], ",", 
+     RowBox[{"InterpolationOrder", "\[Rule]", "All"}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"MetapopDiff", "[", 
+   RowBox[{"es_", ",", "c_", ",", "el_", ",", "r_", ",", "m_", ",", "T_"}], 
+   "]"}], " ", ":=", "\[IndentingNewLine]", 
+  RowBox[{"RecurrenceTable", "[", 
+   RowBox[{
+    RowBox[{"{", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{
+       RowBox[{"Em", "[", 
+        RowBox[{"t", "+", "1"}], "]"}], " ", "\[Equal]", 
+       RowBox[{
+        RowBox[{"Em", "[", "t", "]"}], " ", "+", "  ", 
+        RowBox[{"es", "*", 
+         RowBox[{"S", "[", "t", "]"}]}], " ", "-", " ", 
+        RowBox[{"c", "*", 
+         RowBox[{"L", "[", "t", "]"}], "*", 
+         RowBox[{"Em", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"S", "[", 
+        RowBox[{"t", "+", "1"}], "]"}], " ", "\[Equal]", " ", 
+       RowBox[{
+        RowBox[{"S", "[", "t", "]"}], " ", "+", " ", 
+        RowBox[{"c", "*", 
+         RowBox[{"L", "[", "t", "]"}], "*", 
+         RowBox[{"Em", "[", "t", "]"}]}], " ", "+", " ", 
+        RowBox[{"el", "*", 
+         RowBox[{"L", "[", "t", "]"}]}], "-", 
+        RowBox[{"es", "*", 
+         RowBox[{"S", "[", "t", "]"}]}], "-", 
+        RowBox[{"r", "*", 
+         RowBox[{"S", "[", "t", "]"}]}], " ", "-", " ", 
+        RowBox[{"m", "*", 
+         RowBox[{"L", "[", "t", "]"}], "*", 
+         RowBox[{"S", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"L", "[", 
+        RowBox[{"t", "+", "1"}], "]"}], " ", "\[Equal]", " ", 
+       RowBox[{
+        RowBox[{"L", "[", "t", "]"}], " ", "+", " ", 
+        RowBox[{"r", "*", 
+         RowBox[{"S", "[", "t", "]"}]}], " ", "+", " ", 
+        RowBox[{"m", "*", 
+         RowBox[{"L", "[", "t", "]"}], "*", 
+         RowBox[{"S", "[", "t", "]"}]}], "-", 
+        RowBox[{"el", "*", 
+         RowBox[{"L", "[", "t", "]"}]}]}]}], ",", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{"Em", "[", "1", "]"}], "\[Equal]", 
+       RowBox[{"1", "/", "3"}]}], ",", 
+      RowBox[{
+       RowBox[{"S", "[", "1", "]"}], "\[Equal]", 
+       RowBox[{"1", "/", "3"}]}], ",", 
+      RowBox[{
+       RowBox[{"L", "[", "1", "]"}], "\[Equal]", 
+       RowBox[{"1", "/", "3"}]}]}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"Em", ",", "S", ",", "L"}], "}"}], ",", 
+    RowBox[{"{", 
+     RowBox[{"t", ",", "1", ",", "T"}], "}"}]}], 
+   "]"}]}], "\[IndentingNewLine]", 
+ RowBox[{"Manipulate", "[", "\[IndentingNewLine]", 
+  RowBox[{
+   RowBox[{"With", "[", 
+    RowBox[{
+     RowBox[{"{", 
+      RowBox[{
+       RowBox[{"es", "=", "0.4"}], ",", 
+       RowBox[{"c", "=", "0.8"}], ",", 
+       RowBox[{"el", "=", "0.2"}], ",", 
+       RowBox[{"r", "=", "0.2"}], ",", 
+       RowBox[{"m", "=", "M"}], ",", 
+       RowBox[{"T", "=", "100"}]}], "}"}], ",", "\[IndentingNewLine]", 
+     RowBox[{
+      RowBox[{"Traj", "=", 
+       RowBox[{"Evaluate", "[", 
+        RowBox[{
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"Em", "[", "t", "]"}], ",", 
+           RowBox[{"S", "[", "t", "]"}], ",", 
+           RowBox[{"L", "[", "t", "]"}]}], "}"}], "/.", 
+         RowBox[{"MetapopDyn", "[", 
+          RowBox[{"es", ",", "c", ",", "el", ",", "r", ",", "m", ",", "T"}], 
+          "]"}]}], " ", "]"}]}], ";", "\[IndentingNewLine]", 
+      RowBox[{"GraphicsGrid", "[", 
+       RowBox[{"{", 
+        RowBox[{
+         RowBox[{"{", "\[IndentingNewLine]", 
+          RowBox[{"Plot", "[", 
+           RowBox[{"Traj", ",", 
+            RowBox[{"{", 
+             RowBox[{"t", ",", "0", ",", "T"}], "}"}], ",", 
+            RowBox[{"PlotRange", "\[Rule]", 
+             RowBox[{"{", 
+              RowBox[{"0", ",", "1"}], "}"}]}]}], "]"}], "}"}], ",", 
+         RowBox[{"{", "\[IndentingNewLine]", 
+          RowBox[{"ListPlot", "[", 
+           RowBox[{
+            RowBox[{"{", 
+             RowBox[{
+              RowBox[{
+               RowBox[{"MetapopDiff", "[", 
+                RowBox[{
+                "es", ",", "c", ",", "el", ",", "r", ",", "m", ",", "T"}], 
+                "]"}], "[", 
+               RowBox[{"[", 
+                RowBox[{"All", ",", "1"}], "]"}], "]"}], ",", 
+              "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"MetapopDiff", "[", 
+                RowBox[{
+                "es", ",", "c", ",", "el", ",", "r", ",", "m", ",", "T"}], 
+                "]"}], "[", 
+               RowBox[{"[", 
+                RowBox[{"All", ",", "2"}], "]"}], "]"}], ",", 
+              "\[IndentingNewLine]", 
+              RowBox[{
+               RowBox[{"MetapopDiff", "[", 
+                RowBox[{
+                "es", ",", "c", ",", "el", ",", "r", ",", "m", ",", "T"}], 
+                "]"}], "[", 
+               RowBox[{"[", 
+                RowBox[{"All", ",", "3"}], "]"}], "]"}]}], "}"}], ",", 
+            RowBox[{"Joined", "\[Rule]", "True"}], ",", 
+            RowBox[{"PlotRange", "\[Rule]", 
+             RowBox[{"{", 
+              RowBox[{"0", ",", "1"}], "}"}]}]}], "]"}], 
+          "\[IndentingNewLine]", "}"}]}], "}"}], "]"}]}]}], 
+    "\[IndentingNewLine]", "]"}], ",", "\[IndentingNewLine]", 
+   RowBox[{"{", 
+    RowBox[{"M", ",", "0", ",", "1"}], "}"}]}], "]"}]}], "Input"],
+
+Cell[BoxData[
+ TagBox[
+  StyleBox[
+   DynamicModuleBox[{$CellContext`M$$ = 0, Typeset`show$$ = True, 
+    Typeset`bookmarkList$$ = {}, Typeset`bookmarkMode$$ = "Menu", 
+    Typeset`animator$$, Typeset`animvar$$ = 1, Typeset`name$$ = 
+    "\"untitled\"", Typeset`specs$$ = {{
+      Hold[$CellContext`M$$], 0, 1}}, Typeset`size$$ = {360., {210., 214.}}, 
+    Typeset`update$$ = 0, Typeset`initDone$$, Typeset`skipInitDone$$ = 
+    True, $CellContext`M$2432$$ = 0}, 
+    DynamicBox[Manipulate`ManipulateBoxes[
+     1, StandardForm, "Variables" :> {$CellContext`M$$ = 0}, 
+      "ControllerVariables" :> {
+        Hold[$CellContext`M$$, $CellContext`M$2432$$, 0]}, 
+      "OtherVariables" :> {
+       Typeset`show$$, Typeset`bookmarkList$$, Typeset`bookmarkMode$$, 
+        Typeset`animator$$, Typeset`animvar$$, Typeset`name$$, 
+        Typeset`specs$$, Typeset`size$$, Typeset`update$$, Typeset`initDone$$,
+         Typeset`skipInitDone$$}, "Body" :> 
+      With[{$CellContext`es = 0.4, $CellContext`c = 0.8, $CellContext`el = 
+         0.2, $CellContext`r = 
+         0.2, $CellContext`m = $CellContext`M$$, $CellContext`T = 
+         100}, $CellContext`Traj = Evaluate[
+           ReplaceAll[{
+             $CellContext`Em[$CellContext`t], 
+             $CellContext`S[$CellContext`t], 
+             $CellContext`L[$CellContext`t]}, 
+            $CellContext`MetapopDyn[$CellContext`es, $CellContext`c, \
+$CellContext`el, $CellContext`r, $CellContext`m, $CellContext`T]]]; 
+        GraphicsGrid[{{
+            
+            Plot[$CellContext`Traj, {$CellContext`t, 0, $CellContext`T}, 
+             PlotRange -> {0, 1}]}, {
+            ListPlot[{
+              Part[
+               $CellContext`MetapopDiff[$CellContext`es, $CellContext`c, \
+$CellContext`el, $CellContext`r, $CellContext`m, $CellContext`T], All, 1], 
+              Part[
+               $CellContext`MetapopDiff[$CellContext`es, $CellContext`c, \
+$CellContext`el, $CellContext`r, $CellContext`m, $CellContext`T], All, 2], 
+              Part[
+               $CellContext`MetapopDiff[$CellContext`es, $CellContext`c, \
+$CellContext`el, $CellContext`r, $CellContext`m, $CellContext`T], All, 3]}, 
+             Joined -> True, PlotRange -> {0, 1}]}}]], 
+      "Specifications" :> {{$CellContext`M$$, 0, 1}}, "Options" :> {}, 
+      "DefaultOptions" :> {}],
+     ImageSizeCache->{405., {254., 259.}},
+     SingleEvaluation->True],
+    Deinitialization:>None,
+    DynamicModuleValues:>{},
+    SynchronousInitialization->True,
+    UnsavedVariables:>{Typeset`initDone$$},
+    UntrackedVariables:>{Typeset`size$$}], "Manipulate",
+   Deployed->True,
+   StripOnInput->False],
+  Manipulate`InterpretManipulate[1]]], "Output",
+ CellChangeTimes->{3.6188480014613447`*^9}]
+}, Open  ]]
+},
+WindowSize->{808, 911},
+WindowMargins->{{Automatic, 760}, {Automatic, 0}},
+FrontEndVersion->"10.0 for Mac OS X x86 (32-bit, 64-bit Kernel) (June 27, \
+2014)",
+StyleDefinitions->"Default.nb"
+]
+(* End of Notebook Content *)
+
+(* Internal cache information *)
+(*CellTagsOutline
+CellTagsIndex->{}
+*)
+(*CellTagsIndex
+CellTagsIndex->{}
+*)
+(*NotebookFileOutline
+Notebook[{
+Cell[CellGroupData[{
+Cell[580, 22, 7467, 193, 420, "Input"],
+Cell[8050, 217, 2723, 56, 564, "Output"]
+}, Open  ]]
+}
+]
+*)
+
+(* End of internal cache information *)
+
