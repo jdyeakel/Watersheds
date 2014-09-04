@@ -258,9 +258,6 @@ for (i in 1:4) {
 par(op)
 dev.off()
 
-#Plotting the Graphs
-plot(lattice.net,vertex.size=degree(lattice.net),vertex.label=NA,vertex.color=colors[2],edge.color="lightblue")
-plot(sf.net,vertex.size=degree(sf.net)+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2)
 
 
 #Difference in overall persistence between Lattice and SF networks
@@ -425,7 +422,7 @@ for (ps in 1:length(p.single.vec)) {
       lattice.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(lattice.net.dir)
       #isSymmetric(as.matrix(adj.m))
-      dir.graphs[[i]] <- lattice.net
+      dir.graphs[[i]] <- lattice.net.dir
     }
     if (i == 2) {
       edgelist_in <- get.edgelist(random.net)
@@ -457,7 +454,7 @@ for (ps in 1:length(p.single.vec)) {
       random.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(random.net.dir)
       #isSymmetric(as.matrix(adj.m))
-      dir.graphs[[i]] <- lattice.net
+      dir.graphs[[i]] <- random.net.dir
     }
     if (i == 3) {
       edgelist_in <- get.edgelist(sf.net)
@@ -610,9 +607,18 @@ par(op)
 dev.off()
 
 
-
-
-
+#Plotting the Graphs
+op <- par(mfrow = c(2,3),
+          oma = c(5,4,0,0) + 0.1,
+          mar = c(0,3,1,1) + 0.1,
+          mgp = c(2, 1, 0))
+plot(graphs[[1]],vertex.size=degree(graphs[[1]]),vertex.label=NA,vertex.color=colors[1],edge.color="lightblue",edge.arrow.size=0.6)
+plot(graphs[[2]],vertex.size=degree(graphs[[2]])+2,vertex.label=NA,vertex.color=colors[2],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
+plot(graphs[[3]],vertex.size=degree(graphs[[3]])+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
+plot(dir.graphs[[1]],vertex.size=degree(graphs[[1]]),vertex.label=NA,vertex.color=colors[1],edge.color="lightblue",edge.arrow.size=0.6)
+plot(dir.graphs[[2]],vertex.size=degree(graphs[[2]])+2,vertex.label=NA,vertex.color=colors[2],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
+plot(dir.graphs[[3]],vertex.size=degree(graphs[[3]])+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
+par(op)
 
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m0.1.RData")
 pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m",m,".pdf",sep="")
