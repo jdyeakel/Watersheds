@@ -198,6 +198,207 @@ return output;
 }
             ')
 
+#How to backwards iterate
+cppFunction('
+NumericVector backit(NumericVector x) {
+int l = x.size();
+NumericVector y(l);
+int tic = 0;
+for (int i=l; i --> 0;) {
+  y(tic) = x(i);
+  tic = tic + 1;
+}
+NumericVector output = y;
+return output;
+}
+            ')
+
+
+#Grab integer component
+cppFunction('
+double intpart(double x) {
+double y = floor(x);
+return y;
+}
+            ')
+
+#Apply Changes to a List
+
+cppFunction('
+List changelist(List x) {
+int l = x.size();
+for (int i=0;i<l;i++) {
+NumericMatrix m = x[i];
+m(1,1) = m(1,1) + 1;
+x[i] = m;
+}
+return x;
+}            
+            ')
+
+
+cppFunction('
+IntegerVector matrixsize(NumericMatrix M) {
+IntegerVector x(2);
+x(0) = M.nrow();
+x(1) = M.ncol();
+return x;
+}            
+            ')
+
+cppFunction('
+int randomint(int num_res) {
+NumericVector rdraw_v = runif(1);
+double rdraw = as<double>(rdraw_v);
+int draw = (int) floor(rdraw*(num_res));
+return draw;
+}            
+            ')
+
+cppFunction('
+int rf(double x) {
+int y = round(x);
+            return y;
+            }            
+            ')
+
+cppFunction('
+double RandomFloat(float min, float max)
+{
+    float r = (float)rand() / (float)RAND_MAX;
+    return min + r * (max - min);
+}
+            ')
+
+cppFunction('
+int mod(int x, int y)
+{
+    int z = x%y;
+    return z;
+}
+            ')
 
 
 
+cppFunction('
+int nn(int x, int L) {
+      x = x+1;
+      int new_x;
+      int check = 0;
+      int mod = (x)%((L+2));
+      //Bottom Row
+      if (x <= (L+2)) {new_x = x + L*(L+2); check = 1;}
+      //Top Row
+      if (x >= (pow((L+2),2) - (L+1))) {new_x = x - L*(L+2); check = 1;}
+      //Left Row
+      if (mod == 1) {new_x = x + L; check = 1;}
+      //Right Row
+      if (mod == 0) {new_x = x - L; check = 1;}
+      //Bottom Left
+      if ((x <= (L+2)) && (mod == 1)) {new_x = x + L*(L+2) + L; check = 1;}
+      //Bottom Right
+      if ((x <= (L+2)) && (mod == 0)) {new_x = x + L*(L+2) - L; check = 1;}
+      //Top Left
+      if ((x >= (pow((L+2),2) - (L+1))) && (mod == 1)) {new_x = x - L*(L+2) + L; check = 1;}
+      //Top Right
+      if ((x >= (pow((L+2),2) - (L+1))) && (mod == 0)) {new_x = x - L*(L+2) - L; check = 1;}
+      //Middle
+      if(check == 0) {new_x = x;}
+      return new_x - 1;
+}            
+            
+            ')
+
+cppFunction('
+double mmin(NumericVector x) {
+NumericVector::iterator it = std::min_element(x.begin(), x.end());
+double y = *it;
+return y;
+} 
+            ')
+
+cppFunction('
+IntegerVector erase(IntegerVector vec, int i) {
+vec.erase(vec.begin() + i);
+return vec;
+}         
+            ')
+
+
+cppFunction('
+List listed(List x) {
+List y(2);
+List z(1);
+y(0) = x;
+y(1) = x;
+z(0) = y;
+return z;
+}
+            ')
+
+cppFunction('
+IntegerMatrix mm(int x) {
+IntegerMatrix m(x,x);
+m(x,x) = 1;
+return m;
+}
+            ')
+
+cppFunction('
+int findmax(IntegerVector x) {
+int y = which_max(x);
+return y;
+}
+            ')
+
+cppFunction('
+int dr(IntegerVector nn) {
+int num_draw = nn.size();
+NumericVector rdraw_v = runif(1);
+double rdraw = as<double>(rdraw_v);
+int draw = (int) floor(rdraw*(num_draw));
+int new_loc = nn(draw);
+return new_loc;
+}
+            ')
+
+cppFunction('
+NumericVector drawexp(double num, double x) {
+double lam = 1/x;
+NumericVector draw = round(rexp(num,lam),0);
+return draw;
+}
+            ')
+
+cppFunction('
+NumericVector addend(NumericVector v, double x) {
+v.push_back(x);
+return v;
+}
+            ')
+
+cppFunction('
+int randint(double min, double max) {
+int id = min + (rand() % (int)(max - min + 1.L));
+return id;
+}
+            ')
+
+cppFunction('
+double randnum() {
+double r = ((double) rand() / (RAND_MAX));
+return r;
+}
+            ')
+
+
+cppFunction('
+List growlist(NumericVector tostart, NumericVector toadd, int n) {
+List x(1);
+x(0) = tostart;
+for (int i=0;i<n;i++) {
+x.push_back(toadd);
+}
+return x;
+}
+            ')

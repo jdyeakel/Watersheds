@@ -5,10 +5,10 @@ using namespace Rcpp;
 // source this function into an R session using the Rcpp::sourceCpp 
 // function (or via the Source button on the editor toolbar)
 
-// For more on using Rcpp click the Help button on the editor toolbar
+// Importing distinct up and downstream colonization and rescue rates
 
 // [[Rcpp::export]]
-List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatrix Meta, List nn, double c, double r, double m, NumericVector ext_seq) {
+List ESL_meta2_OCN(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatrix Meta, List nn_up, List nn_down, double r, double cup, double cdown, double mup, double mdown, NumericVector ext_seq) {
   
   //Cypher
   
@@ -18,6 +18,18 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
   int extl = ext_seq.size(); 
   List Meta_ext(extl);
   
+  List Meta_nodeS_ext(extl);
+  List Meta_nodeL_ext(extl);
+  
+  int erl = extl*repetitions;
+  List Xstates(erl);
+  
+  double t_mid_d = t_term/2;
+  int t_mid = (int)t_mid_d;
+  int interval = t_term - t_mid;
+  
+  int exreptic = -1;
+  
   for (int extic=0;extic<extl;extic++) {
     
     //Define extinction values
@@ -26,8 +38,17 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
     
     NumericMatrix Meta_mean(3,repetitions);
     
+    // List Meta_nodeS(repetitions,);
+    // List Meta_nodeL(repetitions);
+    
+    NumericMatrix Meta_burnE(interval,repetitions);
+    NumericMatrix Meta_burnS(interval,repetitions);
+    NumericMatrix Meta_burnL(interval,repetitions);
+    
     //Begin repitition iterations
     for (int rep=0;rep<repetitions;rep++) {
+      
+      exreptic = exreptic + 1;
       
       //Probability matrices
       NumericMatrix pr_Colonize(n,t_term);
@@ -56,20 +77,29 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
         for (int i=0;i<n;i++) {
           
           //Large nodes counter :: how many large nodes are connected to node 'i'?
-          int num_L = 0;
+          int num_Lup = 0;
+          int num_Ldown = 0;
           
           //Find the states of nearest neighbors for 'i'
-          IntegerVector nn_patches = as<IntegerVector>(nn[i]);
-          int l_patches = nn_patches.size();
-          IntegerVector nn_states(l_patches);
+          IntegerVector nn_patchesup = as<IntegerVector>(nn_up[i]);
+          IntegerVector nn_patchesdown = as<IntegerVector>(nn_down[i]);
+          int l_patchesup = nn_patchesup.size();
+          int l_patchesdown = nn_patchesdown.size();
+          IntegerVector nn_statesup(l_patchesup);
+          IntegerVector nn_statesdown(l_patchesdown);
           
-          //Loop through nearest neighbor patches
-          for (int j=0;j<l_patches;j++) {
-            int j_patch = nn_patches(j);
-            nn_states(j) = states(j_patch);
-            
+          //Loop through nearest UPSTREAM neighbor patches
+          for (int j=0;j<l_patchesup;j++) {
+            int j_patch = nn_patchesup(j);
+            nn_statesup(j) = states(j_patch);
             //How many Large nodes are nearest neighbors to node i?
-            if (nn_states(j) == 2) {num_L = num_L + 1;}
+            if (nn_statesup(j) == 2) {num_Lup = num_Lup + 1;}
+          } 
+          for (int j=0;j<l_patchesdown;j++) {
+            int j_patch = nn_patchesdown(j);
+            nn_statesdown(j) = states(j_patch);
+            //How many Large nodes are nearest neighbors to node i?
+            if (nn_statesdown(j) == 2) {num_Ldown = num_Ldown + 1;}
           } 
           
           //Dynamics of the current patch
@@ -77,7 +107,7 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
           //If the current state is Empty
           if (states(i) == 0) {
             // What is the probability that empty nodes is colonized by a neighboring large node?
-            double pr_ES = 1 - pow((1-c),num_L);
+            double pr_ES = 1 - (pow((1-cup),num_Lup)*pow((1-cdown),num_Ldown));
             NumericVector draw_ES_temp = runif(1);
             double draw_ES = as<double>(draw_ES_temp);
             
@@ -98,7 +128,7 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
             //Probability that S -> L from growth
             double pr_SL_grow = r;
             //Probability that S -> L from rescue
-            double pr_SL_rescue = 1 - pow((1-m),num_L);
+            double pr_SL_rescue = 1 - (pow((1-mup),num_Lup)*pow((1-mdown),num_Ldown));
             //Probability that S -> S... no growth, no rescue, no extinction
             double pr_S_stay = (1 - es);
             
@@ -169,33 +199,39 @@ List ESL_meta2(int n, int t_term, int repetitions, IntegerMatrix X, IntegerMatri
         
       }// end t
       
+      Xstates(exreptic) = X;
       
       //Burn off first half of simulation
-      double t_mid_d = t_term/2;
-      int t_mid = (int)t_mid_d;
-      int interval = t_term - t_mid;
-      NumericVector Meta_burnE(interval);
-      NumericVector Meta_burnS(interval);
-      NumericVector Meta_burnL(interval);
+      // NumericVector Meta_burnE(interval);
+      // NumericVector Meta_burnS(interval);
+      // NumericVector Meta_burnL(interval);
       for (int i=0;i<interval;i++) {
-        Meta_burnE(i) = Meta(0,t_mid+i);
-        Meta_burnS(i) = Meta(1,t_mid+i);
-        Meta_burnL(i) = Meta(2,t_mid+i);
+        Meta_burnE(i,rep) = Meta(0,t_mid+i);
+        Meta_burnS(i,rep) = Meta(1,t_mid+i);
+        Meta_burnL(i,rep) = Meta(2,t_mid+i);
       }
       //Record Summary Statistics
       Meta_mean(0,rep) = mean(Meta_burnE);
       Meta_mean(1,rep) = mean(Meta_burnS);
       Meta_mean(2,rep) = mean(Meta_burnL);
       
+      // Meta_nodeS(rep) = Meta_burnS;
+      // Meta_nodeL(rep) = Meta_burnL;
+      
     }// end reps
     
     Meta_ext(extic) = Meta_mean;
+    Meta_nodeS_ext(extic) = Meta_burnS;
+    Meta_nodeL_ext(extic) = Meta_burnL;
     
   } // end extinction sequence
   
-  List esl_out(7);
+  List esl_out(2);
   
-  esl_out(0) = Meta_ext;
+  esl_out(0) = Meta_ext; // [extl][3,rep]
+  // esl_out(1) = Meta_nodeS_ext;
+  // esl_out(2) = Meta_nodeL_ext;
+  esl_out(1) = Xstates; // [extl*repititions][numnodes,t_term]
   //esl_out(1) = X;
   //esl_out(2) = pr_Colonize;
   //esl_out(3) = pr_Grow;

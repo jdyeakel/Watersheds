@@ -4,7 +4,8 @@ library(RColorBrewer)
 library(igraph)
 library(intergraph)
 library(Rcpp)
-sourceCpp('/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta2.cpp')
+sourceCpp('/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta2.cpp')
+sourceCpp('/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta.cpp')
 
 t.term <- 1000
 n <- 100
@@ -77,7 +78,7 @@ plot(graph.adjacency(adj.m,mode="undirected"),vertex.size=2,vertex.label=NA,vert
 ###########################
 sourceCpp('/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta.cpp')
 
-t.term <- 5000
+t.term <- 10000
 n <- 100
 l <- 200
 X <- matrix(0,n,t.term)
@@ -87,6 +88,7 @@ initial <- c(n - 2*round(n/3,0),round(n/3,0),round(n/3,0))
 X[,1] <- c(rep(0,initial[1]),rep(1,initial[2]),rep(2,initial[3]))
 Meta[,1] <- initial
 
+#THIS CHECKS OUT 2/11/20
 #Make list of nearest neighbors for each i
 nn <- list()
 for (i in 1:n) {
@@ -98,7 +100,7 @@ for (i in 1:n) {
 c <- 0.2
 r <- 0.2
 m <- 0.00
-el <- 0.2
+el <- 0.05
 es <- 2*el
 
 #### C++ Version
@@ -106,13 +108,14 @@ nn_cpp = lapply(nn,function(x){x-1})
 ESL.out <- ESL_meta(n, t.term, X, Meta, nn_cpp, c, r, m, es, el)
 
 colors <- brewer.pal(3,"Set1"); trans <- ""
-plot(ESL.out[[2]][1,]/n,type="l",col=paste(colors[1],trans,sep=""),ylim=c(0,1),xlim=c(0,t.term),lwd=3)
-lines(ESL.out[[2]][2,]/n,col=paste(colors[2],trans,sep=""),lwd=3)
-lines(ESL.out[[2]][3,]/n,col=paste(colors[3],trans,sep=""),lwd=3)
+plot(ESL.out[[2]][1,]/n,type="l",col=paste(colors[1],trans,sep=""),ylim=c(0,1),xlim=c(0,t.term),lwd=2)
+lines(ESL.out[[2]][2,]/n,col=paste(colors[2],trans,sep=""),lwd=2)
+lines(ESL.out[[2]][3,]/n,col=paste(colors[3],trans,sep=""),lwd=2)
 
 
 # Analysis of C++ simulation
 # Across different types of networks
+#NOTE 2/11/20 - 
 sourceCpp('src/ESL_meta2.cpp')
 #Length of simulation
 t.term <- 5000
@@ -228,12 +231,12 @@ save.image(image_filename)
 
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m0.RData")
 
-pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_m",m,".pdf",sep="")
+pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results2/ESL_m",m,".pdf",sep="")
 
 colors <- brewer.pal(3,"Set1"); trans <- ""
 dev.off()
 pdf(file=pdf_filename
-    ,width=6.5,height=14)
+    ,width=4,height=8)
 op <- par(mfrow = c(4,1),
           oma = c(5,4,0,0) + 0.1,
           mar = c(0,3,1,1) + 0.1,
@@ -407,12 +410,15 @@ for (ps in 1:length(p.single.vec)) {
       for (k in 1:length(edgel[,1])) {
         if ((k %in% skip) == FALSE) {
           link <- edgel[k,]
+          #Find positions in edgelist where node A -> B and B -> A
           pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
           pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
+          #Add these to skip list
           skip <- c(skip,pos1,pos2)
           draw.single <- runif(1)
           if (draw.single < p.single) {
             tic <- tic + 1
+            #Chose one of those links to delete (at random)
             del.link[tic] <- sample(c(pos1,pos2),1)
           }
         }
@@ -424,6 +430,9 @@ for (ps in 1:length(p.single.vec)) {
       adj.m <- get.adjacency(lattice.net.dir)
       #isSymmetric(as.matrix(adj.m))
       dir.graphs[[i]] <- lattice.net.dir
+    
+      # plot(lattice.net,vertex.size=0.25)
+      # plot(lattice.net.dir,vertex.size=0.25)
     }
     if (i == 2) {
       edgelist_in <- get.edgelist(random.net)
@@ -439,12 +448,15 @@ for (ps in 1:length(p.single.vec)) {
       for (k in 1:length(edgel[,1])) {
         if ((k %in% skip) == FALSE) {
           link <- edgel[k,]
+          #Find positions in edgelist where node A -> B and B -> A
           pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
           pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
+          #Add these to skip list
           skip <- c(skip,pos1,pos2)
           draw.single <- runif(1)
           if (draw.single < p.single) {
             tic <- tic + 1
+            #Chose one of those links to delete (at random)
             del.link[tic] <- sample(c(pos1,pos2),1)
           }
         }
@@ -456,6 +468,8 @@ for (ps in 1:length(p.single.vec)) {
       adj.m <- get.adjacency(random.net.dir)
       #isSymmetric(as.matrix(adj.m))
       dir.graphs[[i]] <- random.net.dir
+      # plot(random.net,vertex.size=0.25)
+      # plot(random.net.dir,vertex.size=0.25)
     }
     if (i == 3) {
       edgelist_in <- get.edgelist(sf.net)
@@ -474,12 +488,15 @@ for (ps in 1:length(p.single.vec)) {
       for (k in 1:length(edgel[,1])) {
         if ((k %in% skip) == FALSE) {
           link <- edgel[k,]
+          #Find positions in edgelist where node A -> B and B -> A
           pos1 <- which(apply(edgel,1,function(x){(x[1]==link[1] && x[2]==link[2])})==TRUE)
           pos2 <- which(apply(edgel,1,function(x){(x[1]==link[2] && x[2]==link[1])})==TRUE)
+          #Add these to skip list
           skip <- c(skip,pos1,pos2)
           draw.single <- runif(1)
           if (draw.single < p.single) {
             tic <- tic + 1
+            #Chose one of those links to delete (at random)
             del.link[tic] <- sample(c(pos1,pos2),1)
           }
         }
@@ -490,6 +507,8 @@ for (ps in 1:length(p.single.vec)) {
       sf.net.dir <- graph.edgelist(edgel.new)
       adj.m <- get.adjacency(sf.net.dir)
       dir.graphs[[i]] <- sf.net.dir
+      # plot(sf.net,vertex.size=0.25)
+      # plot(sf.net.dir,vertex.size=0.25)
     }
     
     #Make list of nearest neighbors for each node
@@ -584,7 +603,7 @@ for (i in 1:3) { #nets
 }
 
 # Contour plot of the effect of directedness on persistence
-pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m",m,".pdf",sep="")
+pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results2/ESLdir_m",m,".pdf",sep="")
 dev.off()
 pdf(file=pdf_filename,width=3.5,height=6)
 op <- par(mfrow = c(3,1),
@@ -598,7 +617,12 @@ for (i in 1:3) { # Loop over different networks
     if (ps == 1) {
       if (i == 3) {
         plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,2),ylim=c(0,1))
-      } else {plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,2),ylim=c(0,1), xaxt='n', ann=FALSE)}
+      } else {
+        plot(ext.seq/c,tot.pers,type="l",lwd = 2,col=colors[ps],xlim=c(0,2),ylim=c(0,1), xaxt='n', ann=FALSE)
+      }
+      if (i == 1){
+        legend(1.7,1.1,legend = p.single.vec,col=colors,bty='n',pch=16)
+      }
     } else {
       lines(ext.seq/c,tot.pers,type="l",lwd=2,col=colors[ps])
     }
@@ -610,17 +634,19 @@ dev.off()
 
 #Plotting the Graphs
 colors <- brewer.pal(3,"Set1")
-op <- par(mfrow = c(1,3),
-          oma = c(5,4,0,0) + 0.1,
-          mar = c(0,3,1,1) + 0.1,
-          mgp = c(2, 1, 0))
+# op <- par(mfrow = c(1,3),
+#           oma = c(0,0,0,0) + 0.1,
+#           mar = c(0,3,1,1) + 0.1)
+layout(matrix(c(1,2,3), 1, 3, byrow = TRUE), 
+   widths=c(1,1,1), heights=c(0.5,0.5,0.5))
+par(oma = c(3, 4, 1, 1), mar = c(1, 1, 0, 1)) #,mai=c(0.6,0.6,0,0.1)
+plot(graphs[[1]],vertex.size=degree(graphs[[1]])+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=1,edge.arrow.size=0.6)
 plot(graphs[[2]],vertex.size=degree(graphs[[2]]),vertex.label=NA,vertex.color=colors[1],edge.color="lightblue",edge.arrow.size=0.6)
-plot(graphs[[3]],vertex.size=degree(graphs[[3]])+2,vertex.label=NA,vertex.color=colors[2],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
-plot(graphs[[4]],vertex.size=degree(graphs[[4]])+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
+plot(graphs[[3]],vertex.size=degree(graphs[[3]])+2,vertex.label=NA,vertex.color=colors[2],edge.color="lightblue",edge.width=1,edge.arrow.size=0.6)
 #plot(dir.graphs[[1]],vertex.size=degree(graphs[[1]]),vertex.label=NA,vertex.color=colors[1],edge.color="lightblue",edge.arrow.size=0.6)
 #plot(dir.graphs[[2]],vertex.size=degree(graphs[[2]])+2,vertex.label=NA,vertex.color=colors[2],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
 #plot(dir.graphs[[3]],vertex.size=degree(graphs[[3]])+2,vertex.label=NA,vertex.color=colors[3],edge.color="lightblue",edge.width=2,edge.arrow.size=0.6)
-par(op)
+# par(op)
 
 load("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m0.1.RData")
 pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESLdir_m",m,".pdf",sep="")
@@ -890,11 +916,13 @@ for (i in 1:3) {
 image_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference2.RData",sep="")
 save.image(image_filename)
 
+load(image_filename)
+
 colors <- brewer.pal(11,"Spectral")
 
 
 for (i in 1:3) {
-  pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results/ESL_DirectedDifference_Graph",i,".pdf",sep="")
+  pdf_filename <- paste("/Users/justinyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results2/ESL_DirectedDifference_Graph",i,".pdf",sep="")
   pdf(file=pdf_filename,width=12,height=8)
   op <- par(mfrow = c(3,4),
             oma = c(5,4,0,0) + 0.1,
