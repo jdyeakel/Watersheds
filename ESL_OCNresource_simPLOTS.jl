@@ -14,7 +14,7 @@ library(RColorBrewer)
 """
 
 
-filename = "data/ESL/sim_settings.jld";
+filename = "data/ESLresource/sim_settings.jld";
 namespace = smartpath(filename);
 @load namespace udscalevec ext_seq t_term repetitions numnodes dedges uedges area r;
 
@@ -25,7 +25,7 @@ ludscalevec = length(udscalevec);
 a=1;
 for b=1:ludscalevec
     indices = [a,b];
-    filename = "data/ESL/sim.jld";
+    filename = "data/ESLresource/sim.jld";
     namespace = smartpath(filename,indices);
     @load namespace ESL_out;
     
@@ -68,46 +68,71 @@ for b=1:ludscalevec
     
     #8
     #11
-    msd = vec(std(statesout[11,:,:,1:1000],dims=3));
-    mm = vec(mean(statesout[11,:,:,1:1000],dims=3));
     
     # scatterplot(repeat(cdist,inner=repetitions), msd ./ mm)
     
-    filename="Results2/degreevCV.pdf"
+    
+    m_e = Array{Float64}(undef,length(ext_seq),repetitions);
+    m_s = Array{Float64}(undef,length(ext_seq),repetitions);
+    m_l = Array{Float64}(undef,length(ext_seq),repetitions);
+    for j=1:length(ext_seq)
+        m_e[j,:] = ESL_out[1][j][1,:] ./ numnodes;
+        m_s[j,:] = ESL_out[1][j][2,:] ./ numnodes;
+        m_l[j,:] = ESL_out[1][j][3,:] ./ numnodes;
+    end
+    filename="ResultsRes/extplot_noflow.pdf"
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(deg,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Site degree',ylab='Coefficient of Variation',ylim=c(0,2))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    plot($ext_seq/$r,$(mean(m_s,dims=2)),type='l',ylim=c(0,1),xlab='e/c',ylab='Proportion')
+    lines($ext_seq/$r,$(mean(m_l,dims=2)),lty=2)
     dev.off()
     """
     
-    filename="Results2/distvCV.pdf"
-    namespace=smartpath(filename);
-    R"""
-    pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(cdist,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Distance to confluence',ylab='Coefficient of Variation',ylim=c(0,2))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
-    dev.off()
-    """
-    filename="Results2/areavCV.pdf"
-    namespace=smartpath(filename);
-    R"""
-    pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='River area',ylab='Coefficient of Variation',log='x',ylim=c(0,2))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
-    dev.off()
-    """
+    # findmax(mean(m_s,dims=2))
+    #look at results at the extinction value where S is maximized
+    extindex = findmax(vec(mean(m_s,dims=2)))[2];
     
-    
-    filename="Results2/nodevtime.pdf"
+    filename="ResultsRes/nodevtime_noflow.pdf"
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=12,height=8)
-    image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(statesout[8,1,:,1:1000])),col=c('white','gray','black'),xlab='Time',ylab='Sites')
+    image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(statesout[extindex,1,:,1:1000])),col=c('white','gray','black'),xlab='Time',ylab='Sites')
     # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
     dev.off()
     """
+    
+    msd = vec(std(statesout[extindex,:,:,1:1000],dims=3));
+    mm = vec(mean(statesout[extindex,:,:,1:1000],dims=3));
+    
+    
+    filename="ResultsRes/degreevCV_noflow.pdf"
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(deg,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Site degree',ylab='Coefficient of Variation',ylim=c(0,max($(msd ./ mm))))
+    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    dev.off()
+    """
+    
+    filename="ResultsRes/distvCV_noflow.pdf"
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(cdist,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Distance to confluence',ylab='Coefficient of Variation',ylim=c(0,max($(msd ./ mm))))
+    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    dev.off()
+    """
+    filename="ResultsRes/areavCV_noflow.pdf"
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='River area',ylab='Coefficient of Variation',log='x',ylim=c(0,max($(msd ./ mm))))
+    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    dev.off()
+    """
+    
+    
     
     
     for i=1:lext_seq

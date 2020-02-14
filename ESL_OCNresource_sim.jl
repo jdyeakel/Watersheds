@@ -14,9 +14,9 @@ library(RColorBrewer)
 
 numnodes = 30^2;
 numedges = numnodes -1; #only true for trees!
-ngraphs = 10;
+ngraphs = 1;
 # cd = 0.2;
-udscalevec = collect(1:0.2:4);
+udscalevec = [1,4];
 ludscalevec = length(udscalevec);
 # maxlinks = 30*30;
 
@@ -65,14 +65,14 @@ area = SharedArray{Float64}(numnodes,ngraphs);
     area[:,i] = a;
 end
 
-M_e = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
-M_s = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
-M_l = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
+# M_e = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
+# M_s = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
+# M_l = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
 
 numout = SharedArray{Float64}(ngraphs,ludscalevec,extl,3,repetitions);
 statesout = SharedArray{Int64}(ngraphs,ludscalevec,extl,repetitions,numnodes,t_term);
 
-filename = "data/ESL/sim_settings.jld";
+filename = "data/ESLresource/sim_settings.jld";
 namespace = smartpath(filename);
 @save namespace udscalevec ext_seq t_term repetitions numnodes dedges uedges area r;
 
@@ -99,13 +99,14 @@ namespace = smartpath(filename);
     mdown = copy(r);
     mup = mdown*udscale;
     
-    initial = rand([0,1,2],numnodes);
+    # initial = rand([0,1,2],numnodes);
     #get nearest neighbors for up/downstream
     #Make list of nearest neighbors for each node
     R"""
     library(igraph)
     library(Rcpp)
     sourceCpp('/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta2_OCN.cpp')
+    sourceCpp('/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/src/ESL_meta2_OCNresource.cpp')
 
     adj.m <- get.adjacency(graph_from_edgelist($ue))
     nn_up <- list()
@@ -135,7 +136,10 @@ namespace = smartpath(filename);
     # Meta[,1] <- c(length(which($initial==0)),length(which($initial==1)),length(which($initial==2)))
 
     #Perform Simulation
+    #without resource lattice
     ESL_out <- ESL_meta2_OCN($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq)
+    #with resource lattice
+    ESL_outres <- ESL_meta2_OCNresource($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq)
     
     # m_e <- matrix(0,length($ext_seq),$repetitions)
     # m_s <- matrix(0,length($ext_seq),$repetitions)
@@ -145,16 +149,21 @@ namespace = smartpath(filename);
     #     m_s[j,] <- ESL_out[[1]][[j]][2,]/$numnodes
     #     m_l[j,] <- ESL_out[[1]][[j]][3,]/$numnodes
     # }  
-    """
+    """;
     # @rget m_e;
     # @rget m_s;
     # @rget m_l;
     # 
     @rget ESL_out;
+    @rget ESL_outres;
     
     #save data
     indices = [a,b];
-    filename = "data/ESL/sim.jld";
+    filename = "data/ESLresource/sim.jld";
+    namespace = smartpath(filename,indices);
+    @save namespace ESL_out;
+    indices = [a,b];
+    filename = "data/ESLresource/sim_res.jld";
     namespace = smartpath(filename,indices);
     @save namespace ESL_out;
     

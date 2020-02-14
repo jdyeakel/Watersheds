@@ -8,7 +8,7 @@ using namespace Rcpp;
 // Importing distinct up and downstream colonization and rescue rates
 
 // [[Rcpp::export]]
-List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down, double r, double cup, double cdown, double mup, double mdown, NumericVector ext_seq) {
+List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List nn_down, double r, double cup, double cdown, double mup, double mdown, NumericVector ext_seq) {
   
   //Cypher
   
@@ -57,24 +57,40 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
       NumericMatrix pr_NoGrowNoRescueStay(n,t_term);
       NumericMatrix pr_NoGrowNoRescueExtinct(n,t_term);
       
-      //Initlialize X and Meta
+      //Initlialize Res, X, and Meta
+      IntegerVector Res(n);
       IntegerMatrix X(n,t_term);
       IntegerMatrix Meta(3,t_term);
       for (int i=0;i<n;i++) {
-        NumericVector rdraw_temp = runif(1);
-        double rdraw = as<double>(rdraw_temp);
+        // NumericVector rdraw_temp = runif(1);
+        // double rdraw = as<double>(rdraw_temp);
+        double rdraw; rdraw = rand();
         if (rdraw < 1/3) {
           X(i,0) = 0;
           Meta(0,0) = Meta(0,0) + 1;
+          //Probability that resource is + 1
+          // NumericVector resdraw_temp = runif(1);
+          // double resdraw = as<double>(resdraw_temp);
+          double resdraw; resdraw = rand();
+          //Population not present, so Resource may be +1 or -1
+          if (resdraw < 0.5) {
+            Res(i) = 1;
+          } else {
+            Res(i) = -1;
+          }
         }
         if (rdraw > 1/3) {
           if (rdraw < 2/3) {
             X(i,0) = 1;
             Meta(1,0) = Meta(1,0) + 1;
+            //Resource =1 because a population is present
+            Res(i) = 1;
           }
           if (rdraw > 2/3) {
             X(i,0) = 2;
             Meta(2,0) = Meta(2,0) + 1;
+            //Resource =1 because a population is present
+            Res(i) = 1;
           }
         }
       }
@@ -82,6 +98,35 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
       //Begin time iterations (t)
       for (int t=0;t<(t_term-1);t++) {
         
+        //Update resource spins by the collective influence of their neighbors
+        //Currently does not depend on the state of its own site
+        //Modify this by int influence = Res(i);
+        for (int i=0;i<n;i++) {
+          IntegerVector nn_patchesup = as<IntegerVector>(nn_up[i]);
+          IntegerVector nn_patchesdown = as<IntegerVector>(nn_down[i]);
+          int l_patchesup = nn_patchesup.size();
+          int l_patchesdown = nn_patchesdown.size();
+          
+          //Loop through nearest UPSTREAM neighbor patches
+          int influence = 0;
+          for (int j=0;j<l_patchesup;j++) {
+            int j_patch = nn_patchesup(j);
+            influence = influence + Res(j_patch);
+          } 
+          for (int j=0;j<l_patchesdown;j++) {
+            int j_patch = nn_patchesdown(j);
+            influence = influence + Res(j_patch);
+          } 
+          if (influence > 0) {
+            Res(i) = 1;
+          } else {
+            Res(i) = -1;
+          }
+        }
+        
+        
+        
+        //ESL UPDATING
         //Record the states of patches at time t
         IntegerVector states(n);
         for (int j=0;j<n;j++) {
@@ -93,7 +138,6 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
         int XE_next = 0;
         int XS_next = 0;
         int XL_next = 0;
-        
         
         //Begin individual patch iterations (i)
         for (int i=0;i<n;i++) {
@@ -134,8 +178,14 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
             double draw_ES = as<double>(draw_ES_temp);
             
             if (draw_ES < pr_ES) {
-              //If it is colonized, 0 -> 1
-              X(i,t+1) = 1;
+              //Species move to node to colonize, but are there resources?
+              if (Res(i) > 0) {
+                //If it is colonized, 0 -> 1
+                X(i,t+1) = 1;
+                //Don't need to update Res because it is already +1
+              } else {
+                X(i,t+1) = 0;
+              }
             } else {
               //If it is not colonized, 0 -> 0
               X(i,t+1) = 0;
@@ -160,6 +210,8 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
             //Does S grow to L?
             if (draw_SL_grow < pr_SL_grow) {
               X(i,t+1) = 2;
+              //Resources are maintained by their population
+              Res(i) = 1;
             } else {
               //If S does not grow, it can 1) get rescued, stay small, or go extinct
               NumericVector draw_SL_rescue_temp = runif(1);
@@ -168,6 +220,8 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
               //Does S get rescued to L?
               if (draw_SL_rescue < pr_SL_rescue) {
                 X(i,t+1) = 2;
+                //Resources are maintained by their population
+                Res(i) = 1;
               } else {
                 //If not it can stay or go extinct
                 NumericVector draw_S_stay_temp = runif(1);
@@ -175,8 +229,12 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
                 //Does S -> S?
                 if (draw_S_stay < pr_S_stay) {
                   X(i,t+1) = 1;
+                  //Resources are maintained by their population
+                  Res(i) = 1;
                   //If not, S -> 0
-                } else {X(i,t+1) = 0;}
+                } else {
+                  X(i,t+1) = 0;
+                }
               }
             }
             
@@ -196,8 +254,12 @@ List ESL_meta2_OCN(int n, int t_term, int repetitions, List nn_up, List nn_down,
             
             if (draw_LS_shrink < pr_LS_shrink) {
               X(i,t+1) = 1;
+              //Resources are maintained by their population
+              Res(i) = 1;
             } else {
               X(i,t+1) = 2;
+              //Resources are maintained by their population
+              Res(i) = 1;
             }
             
           }
