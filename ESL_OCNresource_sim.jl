@@ -91,6 +91,8 @@ namespace = smartpath(filename);
     
     udscale = udscalevec[b];
     
+    rarea = area[:,b];
+    
     #define colonization upstream and downstream
     #upstream colonization/rescue is greater than downstream colonization/rescue
     #NOTE: 2/12/20 should we scale it so sum(cdown,cup) and sum(mdown,mup) is constant regardless of the udscale that is applied? Because right now, with increased udscale there is a increased overall c and m... which confounds the signal apart from up/down structure.
@@ -137,9 +139,9 @@ namespace = smartpath(filename);
 
     #Perform Simulation
     #without resource lattice
-    ESL_out <- ESL_meta2_OCN($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq)
+    ESL_out <- ESL_meta2_OCN($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq, $rarea)
     #with resource lattice
-    ESL_outres <- ESL_meta2_OCNresource($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq)
+    ESL_outres <- ESL_meta2_OCNresource($numnodes, $t_term, $repetitions, nn_upc, nn_downc, $r, $cup, $cdown, $mup, $mdown, $ext_seq, $rarea)
     
     # m_e <- matrix(0,length($ext_seq),$repetitions)
     # m_s <- matrix(0,length($ext_seq),$repetitions)
@@ -165,7 +167,7 @@ namespace = smartpath(filename);
     indices = [a,b];
     filename = "data/ESLresource/sim_res.jld";
     namespace = smartpath(filename,indices);
-    @save namespace ESL_out;
+    @save namespace ESL_outres;
     
     # let tic=0
     #     for i=1:extl

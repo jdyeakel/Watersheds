@@ -8,7 +8,7 @@ using namespace Rcpp;
 // Importing distinct up and downstream colonization and rescue rates
 
 // [[Rcpp::export]]
-List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List nn_down, double r, double cup, double cdown, double mup, double mdown, NumericVector ext_seq) {
+List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List nn_down, double r, double cup, double cdown, double mup, double mdown, NumericVector ext_seq, NumericVector rarea) {
   
   //Cypher
   
@@ -111,11 +111,11 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
           int influence = 0;
           for (int j=0;j<l_patchesup;j++) {
             int j_patch = nn_patchesup(j);
-            influence = influence + Res(j_patch);
+            influence = influence + (Res(j_patch)*rarea(j_patch));
           } 
           for (int j=0;j<l_patchesdown;j++) {
             int j_patch = nn_patchesdown(j);
-            influence = influence + Res(j_patch);
+            influence = influence + (Res(j_patch)*rarea(j_patch));
           } 
           if (influence > 0) {
             Res(i) = 1;

@@ -21,6 +21,13 @@ namespace = smartpath(filename);
 lext_seq = length(ext_seq);
 ludscalevec = length(udscalevec);
 
+flowvec = ["noflow","flow"];
+
+msd = Array{Float64}(undef,ludscalevec,numnodes*repetitions);
+mm = Array{Float64}(undef,ludscalevec,numnodes*repetitions);
+msdres = Array{Float64}(undef,ludscalevec,numnodes*repetitions);
+mmres = Array{Float64}(undef,ludscalevec,numnodes*repetitions);
+
 #for graph 1
 a=1;
 for b=1:ludscalevec
@@ -28,6 +35,10 @@ for b=1:ludscalevec
     filename = "data/ESLresource/sim.jld";
     namespace = smartpath(filename,indices);
     @load namespace ESL_out;
+    
+    filename = "data/ESLresource/sim_res.jld";
+    namespace = smartpath(filename,indices);
+    @load namespace ESL_outres;
     
     #Network data
     pos = a + (a-1);
@@ -53,12 +64,16 @@ for b=1:ludscalevec
     #Metapopulation data
     numout = Array{Float64}(undef,lext_seq,3,repetitions);
     statesout = Array{Int64}(undef,lext_seq,repetitions,numnodes,t_term);
+    numout_res = Array{Float64}(undef,lext_seq,3,repetitions);
+    statesout_res = Array{Int64}(undef,lext_seq,repetitions,numnodes,t_term);
     let tic=0
         for i=1:lext_seq
             numout[i,:,:] = ESL_out[1][i];
+            numout_res[i,:,:] = ESL_outres[1][i];
             for r=1:repetitions
                 tic=tic+1;
                 statesout[i,r,:,:] = ESL_out[2][tic];
+                statesout_res[i,r,:,:] = ESL_outres[2][tic];
             end
         end
     end
@@ -69,18 +84,27 @@ for b=1:ludscalevec
     #8
     #11
     
-    # scatterplot(repeat(cdist,inner=repetitions), msd ./ mm)
+    # scatterplot(repeat(cdist,inner=repetitions), msd[b,:] ./ mm[b,:])
     
     
     m_e = Array{Float64}(undef,length(ext_seq),repetitions);
     m_s = Array{Float64}(undef,length(ext_seq),repetitions);
     m_l = Array{Float64}(undef,length(ext_seq),repetitions);
+    m_eres = Array{Float64}(undef,length(ext_seq),repetitions);
+    m_sres = Array{Float64}(undef,length(ext_seq),repetitions);
+    m_lres = Array{Float64}(undef,length(ext_seq),repetitions);
     for j=1:length(ext_seq)
         m_e[j,:] = ESL_out[1][j][1,:] ./ numnodes;
         m_s[j,:] = ESL_out[1][j][2,:] ./ numnodes;
         m_l[j,:] = ESL_out[1][j][3,:] ./ numnodes;
+        m_eres[j,:] = ESL_outres[1][j][1,:] ./ numnodes;
+        m_sres[j,:] = ESL_outres[1][j][2,:] ./ numnodes;
+        m_lres[j,:] = ESL_outres[1][j][3,:] ./ numnodes;
     end
-    filename="ResultsRes/extplot_noflow.pdf"
+    extindex = findmax(vec(mean(m_s,dims=2)))[2];
+    extindexres = findmax(vec(mean(m_sres,dims=2)))[2];
+    
+    filename=string("ResultsRes/extplot_",flowvec[b],".pdf");
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=5,height=4)
@@ -88,95 +112,140 @@ for b=1:ludscalevec
     lines($ext_seq/$r,$(mean(m_l,dims=2)),lty=2)
     dev.off()
     """
+    filename=string("ResultsRes/extplot_",flowvec[b],"res.pdf");
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot($ext_seq/$r,$(mean(m_sres,dims=2)),type='l',ylim=c(0,1),xlab='e/c',ylab='Proportion')
+    lines($ext_seq/$r,$(mean(m_lres,dims=2)),lty=2)
+    dev.off()
+    """
+    filename=string("ResultsRes/extplot_",flowvec[b],"both.pdf");
+    namespace=smartpath(filename);
+    R"""
+    library(RColorBrewer)
+    pal=brewer.pal(3,'Set1')
+    pdf($namespace,width=5,height=4)
+    plot($ext_seq/$r,$(mean(m_s,dims=2)),type='l',ylim=c(0,1),xlab='e/c',ylab='Proportion')
+    lines($ext_seq/$r,$(mean(m_l,dims=2)),lty=2)
+    lines($ext_seq/$r,$(mean(m_sres,dims=2)),lty=1,col=pal[2])
+    lines($ext_seq/$r,$(mean(m_lres,dims=2)),lty=2,col=pal[2])
+    dev.off()
+    """
     
     # findmax(mean(m_s,dims=2))
     #look at results at the extinction value where S is maximized
-    extindex = findmax(vec(mean(m_s,dims=2)))[2];
     
-    filename="ResultsRes/nodevtime_noflow.pdf"
+    
+    filename=string("ResultsRes/nodevtime_",flowvec[b],".pdf");
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=12,height=8)
     image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(statesout[extindex,1,:,1:1000])),col=c('white','gray','black'),xlab='Time',ylab='Sites')
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    dev.off()
+    """
+    filename=string("ResultsRes/nodevtime_",flowvec[b],"res.pdf");
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=12,height=8)
+    image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(statesout[extindexres,1,:,1:1000])),col=c('white','gray','black'),xlab='Time',ylab='Sites')
     dev.off()
     """
     
-    msd = vec(std(statesout[extindex,:,:,1:1000],dims=3));
-    mm = vec(mean(statesout[extindex,:,:,1:1000],dims=3));
+    msd[b,:] = vec(std(statesout[extindex,:,:,1:1000],dims=3));
+    mm[b,:] = vec(mean(statesout[extindex,:,:,1:1000],dims=3));
+    
+    msdres[b,:] = vec(std(statesout_res[extindexres,:,:,1:1000],dims=3));
+    mmres[b,:] = vec(mean(statesout_res[extindexres,:,:,1:1000],dims=3));
     
     
-    filename="ResultsRes/degreevCV_noflow.pdf"
+    filename=string("ResultsRes/degreevCV_",flowvec[b],".pdf");
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(deg,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Site degree',ylab='Coefficient of Variation',ylim=c(0,max($(msd ./ mm))))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    plot(x=jitter($(repeat(deg,inner=repetitions))),y=$(msd[b,:] ./ mm[b,:]),pch='.',xlab='Site degree',ylab='Coefficient of Variation',ylim=c(0,max($(msd[b,:] ./ mm[b,:]))))
     dev.off()
     """
-    
-    filename="ResultsRes/distvCV_noflow.pdf"
+    filename=string("ResultsRes/degreevCV_",flowvec[b],"res.pdf");
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(cdist,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='Distance to confluence',ylab='Coefficient of Variation',ylim=c(0,max($(msd ./ mm))))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    plot(x=jitter($(repeat(deg,inner=repetitions))),y=$(msdres[b,:] ./ mmres[b,:]),pch='.',xlab='Site degree',ylab='Coefficient of Variation',ylim=c(0,max($(msdres[b,:] ./ mmres[b,:]))))
     dev.off()
     """
-    filename="ResultsRes/areavCV_noflow.pdf"
+    
+    filename=string("ResultsRes/distvCV_",flowvec[b],".pdf");
     namespace=smartpath(filename);
     R"""
     pdf($namespace,width=5,height=4)
-    plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msd ./ mm),pch='.',xlab='River area',ylab='Coefficient of Variation',log='x',ylim=c(0,max($(msd ./ mm))))
-    # image(x=seq(1,$t_term),y=seq(1,$numnodes),z=t($(ESL_out[2][100])),col=c('white','gray','black'))
+    plot(x=jitter($(repeat(cdist,inner=repetitions))),y=$(msd[b,:] ./ mm[b,:]),pch='.',xlab='Distance to confluence',ylab='Coefficient of Variation',ylim=c(0,max($(msd[b,:] ./ mm[b,:]))))
+    dev.off()
+    """
+    filename=string("ResultsRes/distvCV_",flowvec[b],"res.pdf");
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(cdist,inner=repetitions))),y=$(msdres[b,:] ./ mmres[b,:]),pch='.',xlab='Distance to confluence',ylab='Coefficient of Variation',ylim=c(0,max($(msdres[b,:] ./ mmres[b,:]))))
     dev.off()
     """
     
+    filename=string("ResultsRes/areavCV_",flowvec[b],".pdf");
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msd[b,:] ./ mm[b,:]),pch='.',xlab='River area',ylab='Coefficient of Variation',log='x',ylim=c(0,max($(msd[b,:] ./ mm[b,:]))))
+    dev.off()
+    """
+    filename=string("ResultsRes/areavCV_",flowvec[b],"res.pdf");
+    namespace=smartpath(filename);
+    R"""
+    pdf($namespace,width=5,height=4)
+    plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msdres[b,:] ./ mmres[b,:]),pch='.',xlab='River area',ylab='Coefficient of Variation',log='x',ylim=c(0,max($(msdres[b,:] ./ mmres[b,:]))))
+    dev.off()
+    """
+end    
+    
+    
+filename=string("ResultsRes/areavCVratio.pdf");
+namespace=smartpath(filename);
+R"""
+pdf($namespace,width=5,height=4)
+plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msd[2,:] ./ mm[2,:])/$(msd[1,:] ./ mm[1,:]),pch='.',xlab='River area',ylab='CV ratio: HiFlow/NoFlow',log='x',ylim=c(0,max($(msd[2,:] ./ mm[2,:])/$(msd[1,:] ./ mm[1,:]))))
+dev.off()
+"""    
+
+filename=string("ResultsRes/areavCVratio_res.pdf");
+namespace=smartpath(filename);
+R"""
+pdf($namespace,width=5,height=4)
+plot(x=jitter($(repeat(rarea,inner=repetitions))),y=$(msdres[2,:] ./ mmres[2,:])/$(msdres[1,:] ./ mmres[1,:]),pch='.',xlab='River area',ylab='CV ratio: HiFlow/NoFlow',log='x',ylim=c(0,max($(msdres[2,:] ./ mmres[2,:])/$(msdres[1,:] ./ mmres[1,:]))))
+dev.off()
+"""    
     
     
     
-    for i=1:lext_seq
-        #mean across reps
-        #mean across t=500:1000
-        meanstatebysite = mean(mean(statesout[i,:,:,:],dims=1)[1,:,500:1000],dims=2);
-
-
-
-
-
-
-
-
-
-@load "/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/data/ESL_meta2_OCN.jld" numnodes ngraphs uedges dedges area udscalevec t_term repetitions r numout statesout;
-
-# @load "/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/data/ESL_meta2_OCN.jld" numnodes ngraphs uedges dedges area udscalevec t_term repetitions r  M_e M_s M_l;
-
-ludscalevec = length(udscalevec);
-lext_seq = length(ext_seq);
-
-me_g_ud = Array{Float64}(undef,ngraphs,ludscalevec,lext_seq);
-ms_g_ud = Array{Float64}(undef,ngraphs,ludscalevec,lext_seq);
-ml_g_ud = Array{Float64}(undef,ngraphs,ludscalevec,lext_seq);
-for i=1:ngraphs
-    for j=1:ludscalevec
-        #mean across repetitions
-        me_g_ud[i,j,:] = mean(M_e[i,j,:,:],dims=2);
-        ms_g_ud[i,j,:] = mean(M_s[i,j,:,:],dims=2);
-        ml_g_ud[i,j,:] = mean(M_l[i,j,:,:],dims=2);
-    end
-end
-#Take mean across graphs
-me_ud = Array{Float64}(undef,ludscalevec,lext_seq);
-ms_ud = Array{Float64}(undef,ludscalevec,lext_seq);
-ml_ud = Array{Float64}(undef,ludscalevec,lext_seq);
-for j=1:ludscalevec
-    #mean across repetitions
-    me_ud[j,:] = mean(me_g_ud[:,j,:],dims=1);
-    ms_ud[j,:] = mean(ms_g_ud[:,j,:],dims=1);
-    ml_ud[j,:] = mean(ml_g_ud[:,j,:],dims=1);
-end
-
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 #Examine differences for increasing upstream effects over the course
 R"""
 pdf("/Users/jdyeakel/Dropbox/Postdoc/2014_Empirical_Watersheds/Optimal_Channel_Nets/Results2/fig_OCN.pdf",width=8,height=8)
