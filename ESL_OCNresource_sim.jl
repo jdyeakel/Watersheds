@@ -16,7 +16,7 @@ numnodes = 30^2;
 numedges = numnodes -1; #only true for trees!
 ngraphs = 1;
 # cd = 0.2;
-udscalevec = [1,4];
+udscalevec = [1,5];
 ludscalevec = length(udscalevec);
 # maxlinks = 30*30;
 
@@ -31,19 +31,22 @@ repetitions = 10;
 its = ngraphs*ludscalevec;
 
 #downstream edgelist
-dedges = SharedArray{Int64}(numedges,2*ngraphs);
+dedges = Array{Int64}(undef,numedges,2*ngraphs);
 #upstream edgelist
-uedges = SharedArray{Int64}(numedges,2*ngraphs);
+uedges = Array{Int64}(undef,numedges,2*ngraphs);
 #River area
-area = SharedArray{Float64}(numnodes,ngraphs);
+area = Array{Float64}(undef,numnodes,ngraphs);
+LM = Array{Array}(undef,ngraphs)
 #make the graphs beforehand
 # R"graphs <- list(); dedges <- list(); uedges <- list()";
-@time @sync @distributed for i=1:ngraphs
+
+for i=1:ngraphs
     R"""
     library(OCNet)
     library(igraph)
     OCN <- aggregate_OCN(landscape_OCN(create_OCN(sqrt($numnodes), sqrt($numnodes))), thrA = 4)
     a <- OCN$FD$A
+    layoutmatrix = matrix(c(OCN$FD$X,OCN$FD$Y), ncol = 2, nrow = OCN$FD$nNodes)
     # draw_simple_OCN(OCN)
     g <- OCN_to_igraph(OCN, level = "FD")
     de <- get.edgelist(g);
@@ -57,13 +60,16 @@ area = SharedArray{Float64}(numnodes,ngraphs);
     @rget de;
     @rget ue;
     @rget a;
+    @rget layoutmatrix;
     # @rget numv;
     # @rget nume;
     pos = i+(i-1)
     dedges[1:numedges,pos:(pos+1)] = de;
     uedges[1:numedges,pos:(pos+1)] = ue;
     area[:,i] = a;
+    LM[i] = layoutmatrix
 end
+
 
 # M_e = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
 # M_s = SharedArray{Float64}(ngraphs,ludscalevec,length(ext_seq),repetitions);
@@ -74,7 +80,7 @@ statesout = SharedArray{Int64}(ngraphs,ludscalevec,extl,repetitions,numnodes,t_t
 
 filename = "data/ESLresource/sim_settings.jld";
 namespace = smartpath(filename);
-@save namespace udscalevec ext_seq t_term repetitions numnodes dedges uedges area r;
+@save namespace udscalevec ext_seq t_term repetitions numnodes dedges uedges area r LM;
 
 
 @time @sync @distributed for i=0:(its-1)
@@ -91,15 +97,25 @@ namespace = smartpath(filename);
     
     udscale = udscalevec[b];
     
-    rarea = area[:,b];
+    rarea = area[:,a];
     
     #define colonization upstream and downstream
     #upstream colonization/rescue is greater than downstream colonization/rescue
     #NOTE: 2/12/20 should we scale it so sum(cdown,cup) and sum(mdown,mup) is constant regardless of the udscale that is applied? Because right now, with increased udscale there is a increased overall c and m... which confounds the signal apart from up/down structure.
-    cdown = copy(r);
-    cup = cdown*udscale;
-    mdown = copy(r);
-    mup = mdown*udscale;
+    
+    #colonization from 
+    c = copy(r);
+    m = copy(r);
+    cup = (c*udscale)/((udscale) + 1);
+    cdown = (c)/((udscale) + 1);
+    
+    mup = (m*udscale)/((udscale) + 1);
+    mdown = (m)/((udscale) + 1);
+    
+    # cdown = copy(r);
+    # cup = cdown*udscale;
+    # mdown = copy(r);
+    # mup = mdown*udscale;
     
     # initial = rand([0,1,2],numnodes);
     #get nearest neighbors for up/downstream
@@ -164,10 +180,10 @@ namespace = smartpath(filename);
     filename = "data/ESLresource/sim.jld";
     namespace = smartpath(filename,indices);
     @save namespace ESL_out;
-    indices = [a,b];
-    filename = "data/ESLresource/sim_res.jld";
-    namespace = smartpath(filename,indices);
-    @save namespace ESL_outres;
+    
+    filenameres = "data/ESLresource/sim_res.jld";
+    namespaceres = smartpath(filenameres,indices);
+    @save namespaceres ESL_outres;
     
     # let tic=0
     #     for i=1:extl

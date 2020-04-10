@@ -62,16 +62,18 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
       IntegerMatrix X(n,t_term);
       IntegerMatrix Meta(3,t_term);
       for (int i=0;i<n;i++) {
-        // NumericVector rdraw_temp = runif(1);
-        // double rdraw = as<double>(rdraw_temp);
-        double rdraw; rdraw = rand();
+        NumericVector rdraw_temp = runif(1);
+        double rdraw = as<double>(rdraw_temp);
+        // double rdraw; rdraw = rand();
         if (rdraw < 1/3) {
           X(i,0) = 0;
           Meta(0,0) = Meta(0,0) + 1;
           //Probability that resource is + 1
           // NumericVector resdraw_temp = runif(1);
           // double resdraw = as<double>(resdraw_temp);
-          double resdraw; resdraw = rand();
+          NumericVector resdraw_temp = runif(1);
+          double resdraw = as<double>(resdraw_temp);
+          // double resdraw; resdraw = rand();
           //Population not present, so Resource may be +1 or -1
           if (resdraw < 0.5) {
             Res(i) = 1;
@@ -111,11 +113,11 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
           int influence = 0;
           for (int j=0;j<l_patchesup;j++) {
             int j_patch = nn_patchesup(j);
-            influence = influence + (Res(j_patch)*rarea(j_patch));
+            influence = influence + (Res(j_patch)*rarea(j_patch)); //*rarea(j_patch)
           } 
           for (int j=0;j<l_patchesdown;j++) {
             int j_patch = nn_patchesdown(j);
-            influence = influence + (Res(j_patch)*rarea(j_patch));
+            influence = influence + (Res(j_patch)*rarea(j_patch)); //*rarea(j_patch)
           } 
           if (influence > 0) {
             Res(i) = 1;
@@ -176,6 +178,7 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
             double pr_ES = 1 - (pow((1-cup),num_Lup)*pow((1-cdown),num_Ldown));
             NumericVector draw_ES_temp = runif(1);
             double draw_ES = as<double>(draw_ES_temp);
+            // double draw_ES; draw_ES = rand();
             
             if (draw_ES < pr_ES) {
               //Species move to node to colonize, but are there resources?
@@ -185,10 +188,12 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
                 //Don't need to update Res because it is already +1
               } else {
                 X(i,t+1) = 0;
+                //Don't need to update Res because it is already -1
               }
             } else {
               //If it is not colonized, 0 -> 0
               X(i,t+1) = 0;
+              //Res stays the same
             }
             //save the probability or colonization
             pr_Colonize(i,t) = pr_ES;
@@ -203,9 +208,9 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
             double pr_SL_rescue = 1 - (pow((1-mup),num_Lup)*pow((1-mdown),num_Ldown));
             //Probability that S -> S... no growth, no rescue, no extinction
             double pr_S_stay = (1 - es);
-            
             NumericVector draw_SL_grow_temp = runif(1);
             double draw_SL_grow = as<double>(draw_SL_grow_temp);
+            // double draw_SL_grow; draw_SL_grow = rand();
             
             //Does S grow to L?
             if (draw_SL_grow < pr_SL_grow) {
@@ -216,6 +221,7 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
               //If S does not grow, it can 1) get rescued, stay small, or go extinct
               NumericVector draw_SL_rescue_temp = runif(1);
               double draw_SL_rescue = as<double>(draw_SL_rescue_temp);
+              // double draw_SL_rescue; draw_SL_rescue = rand();
               
               //Does S get rescued to L?
               if (draw_SL_rescue < pr_SL_rescue) {
@@ -226,14 +232,17 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
                 //If not it can stay or go extinct
                 NumericVector draw_S_stay_temp = runif(1);
                 double draw_S_stay = as<double>(draw_S_stay_temp);
+                // double draw_S_stay; draw_S_stay = rand();
                 //Does S -> S?
                 if (draw_S_stay < pr_S_stay) {
                   X(i,t+1) = 1;
                   //Resources are maintained by their population
                   Res(i) = 1;
-                  //If not, S -> 0
+                  //If not, S -> 0 and extinction occurs
                 } else {
                   X(i,t+1) = 0;
+                  //Resources flip from +1 to -1
+                  Res(i) = -1;
                 }
               }
             }
@@ -251,6 +260,7 @@ List ESL_meta2_OCNresource(int n, int t_term, int repetitions, List nn_up, List 
             double pr_LS_shrink = el;
             NumericVector draw_LS_shrink_temp = runif(1);
             double draw_LS_shrink = as<double>(draw_LS_shrink_temp);
+            // double draw_LS_shrink; draw_LS_shrink = rand();
             
             if (draw_LS_shrink < pr_LS_shrink) {
               X(i,t+1) = 1;
